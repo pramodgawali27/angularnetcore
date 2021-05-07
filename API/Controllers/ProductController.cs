@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Infrastucture.Data;
 using Core.Entities;
 using Core.Interfaces;
+using Core.Specifications;
+using AutoMapper;
+using API.DTO;
 
 namespace API.Controllers
 {
@@ -14,23 +17,30 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class ProductController : ControllerBase
     {
-        public IProductRepository _repo { get; }
-        public ProductController(IProductRepository repo)
+        public IGenericRepository<Product> _productRepo { get; }
+        public IMapper _mapper { get; }
+        public ProductController(IGenericRepository<Product> productRepo,
+            IMapper mapper)
         {
-            _repo = repo;
+            _productRepo = productRepo;
+            _mapper = mapper;
 
         }
 
         [HttpGet]
         public async Task<ActionResult<List<Product>>> GetProducts()
         {
-            return Ok(await _repo.GetProductsAsync());
+            var spec = new ProductsWithBrandsAndTypesSpecification();
+            var products=await _productRepo.ListAsync(spec);
+            return Ok(_mapper.Map<IReadOnlyList<Product>,IReadOnlyList<ProductDTO>>(products));
         }
 
         [HttpGet("{id}")]
-        public string GetProduct()
+        public async Task<ActionResult<ProductDTO>>  GetProduct(int id)
         {
-            return "This is the Product";
+            var spec = new ProductsWithBrandsAndTypesSpecification(id);
+            var product= await _productRepo.GetEntityWithSpec(spec);
+            return _mapper.Map<Product, ProductDTO>(product);
         }
     }
 }
