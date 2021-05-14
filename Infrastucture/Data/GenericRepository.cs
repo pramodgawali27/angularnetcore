@@ -24,6 +24,10 @@ namespace Infrastucture.Data
         {
             return await _storeContext.Set<T>().ToListAsync();
         }
+        public async Task<int> CountAsync(ISpecification<T> spec)
+        {
+            return await ApplySpecification(spec).CountAsync();
+        }
 
         public async Task<T> GetEntityWithSpec(ISpecification<T> spec){
 return await ApplySpecification(spec).FirstOrDefaultAsync();

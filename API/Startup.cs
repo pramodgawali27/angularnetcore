@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Infrastucture.Data;
 using Core.Interfaces;
 using API.Helpres;
+using API.Extentions;
 
 namespace API
 {
@@ -31,15 +32,18 @@ namespace API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.addApplicationServices();
             services.AddDbContext<StoreContext>(x=>x.UseSqlite(_config.GetConnectionString("DefaultConnection")));
-            services.AddScoped<IProductRepository,ProductRepository>();
-            services.AddScoped(typeof(IGenericRepository<>),(typeof(GenericRepository<>)));
             services.AddAutoMapper(typeof(MappingProfiles));
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
+            });
+            services.AddCors(opt=>{
+opt.AddPolicy("CorsPolicy",policy=>{
+policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200");
+});
             });
         }
 
@@ -58,6 +62,8 @@ namespace API
             app.UseRouting();
 
             app.UseStaticFiles();
+
+            app.UseCors("CorsPolicy");
 
             app.UseAuthorization();
 
